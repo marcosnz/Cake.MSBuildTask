@@ -37,6 +37,7 @@ var nuGetPackSettings   = new NuGetPackSettings {
                                 Description             = assemblyInfo.Description,
                                 Summary                 = "Cake AddIn that extends Cake with ability to run MSBuildTasks", 
                                 ProjectUrl              = new Uri("https://github.com/marcosnz/Cake.MSBuildTask/"),
+                                IconUrl                 = new Uri("https://raw.githubusercontent.com/cake-build/graphics/master/png/cake-medium.png"),
                                 LicenseUrl              = new Uri("https://github.com/marcosnz/Cake.MSBuildTask/blob/master/LICENSE"),
                                 Copyright               = assemblyInfo.Copyright,
                                 ReleaseNotes            = releaseNotes.Notes.ToArray(),
@@ -130,7 +131,7 @@ Task("Create-NuGet-Package")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    if (!Directory.Exists(nugetRoot))
+    if (!System.IO.Directory.Exists(nugetRoot))
     {
 	CreateDirectory(nugetRoot);
     }
