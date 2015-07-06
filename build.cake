@@ -151,7 +151,7 @@ Task("Publish-MyGet")
     }
 
     var source = EnvironmentVariable("MYGET_SOURCE");
-    if(string.IsNullOrEmpty(apiKey)) {
+    if(string.IsNullOrEmpty(source)) {
         throw new InvalidOperationException("Could not resolve MyGet source.");
     }
 
