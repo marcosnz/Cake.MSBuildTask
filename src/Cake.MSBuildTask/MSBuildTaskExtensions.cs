@@ -40,7 +40,7 @@ namespace Cake.MSBuildTask
             {
                 if (!string.IsNullOrEmpty(buildEngine.ErrorText))
                 {
-                    throw new CakeException("buildEngine.ErrorText");
+                    throw new CakeException(buildEngine.ErrorText);
                 }
 
                 throw new CakeException("Task execution failed.");
@@ -78,11 +78,41 @@ namespace Cake.MSBuildTask
         }
 
         /// <summary>
+        /// Converts the path to an array of task items with a single item.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>Task Item</returns>
+        public static ITaskItem[] ToTaskItems(this string path)
+        {
+            return new[] { path.ToTaskItem() };
+        }
+
+        /// <summary>
+        /// Converts the path to an array of task items with a single item.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>Task Item</returns>
+        public static ITaskItem[] ToTaskItems(this FilePath path)
+        {
+            return new[] { path.ToTaskItem() };
+        }
+
+        /// <summary>
+        /// Converts the path to an array of task items with a single item.
+        /// </summary>
+        /// <param name="path">The path.</param>
+        /// <returns>Task Item</returns>
+        public static ITaskItem[] ToTaskItems(this DirectoryPath path)
+        {
+            return new[] { path.ToTaskItem() };
+        }
+
+        /// <summary>
         /// Converts the paths to MSBuild task items.
         /// </summary>
         /// <param name="paths">The paths.</param>
         /// <returns>Task Item</returns>
-        public static IEnumerable<ITaskItem> ToTaskItem(this IEnumerable<DirectoryPath> paths)
+        public static ITaskItem[] ToTaskItems(this IEnumerable<DirectoryPath> paths)
         {
             return paths
                 .Select(f => f.ToTaskItem())
@@ -94,7 +124,7 @@ namespace Cake.MSBuildTask
         /// </summary>
         /// <param name="paths">The paths.</param>
         /// <returns>Task Item</returns>
-        public static IEnumerable<ITaskItem> ToTaskItems(this IEnumerable<string> paths)
+        public static ITaskItem[] ToTaskItems(this IEnumerable<string> paths)
         {
             return paths
                 .Select(f => f.ToTaskItem())
@@ -106,7 +136,7 @@ namespace Cake.MSBuildTask
         /// </summary>
         /// <param name="paths">The paths.</param>
         /// <returns>Task Item</returns>
-        public static IEnumerable<ITaskItem> ToTaskItems(this IEnumerable<FilePath> paths)
+        public static ITaskItem[] ToTaskItems(this IEnumerable<FilePath> paths)
         {
             return paths
                 .Select(f => f.ToTaskItem())

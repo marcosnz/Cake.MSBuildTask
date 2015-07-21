@@ -11,7 +11,7 @@ using System;
 [assembly: AssemblyCompany("Mark Walker")]
 [assembly: AssemblyProduct("Cake.MSBuildTask")]
 [assembly: AssemblyVersion("0.0.1")]
-[assembly: AssemblyFileVersion("0.0.1")]
+[assembly: AssemblyFileVersion("0.0.2")]
 [assembly: AssemblyInformationalVersion("0.0.1")]
 [assembly: AssemblyCopyright("Copyright © Mark Walker 2015")]
 [assembly: CLSCompliant(true)]

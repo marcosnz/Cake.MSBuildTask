@@ -47,8 +47,13 @@
       <HintPath>..\..\tools\Cake\Cake.Core.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="Microsoft.Build.Framework">
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.Build.Utilities.v4.0">
+      <EmbedInteropTypes>False</EmbedInteropTypes>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
