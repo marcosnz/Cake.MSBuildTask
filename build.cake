@@ -28,6 +28,12 @@ var assemblyInfo        = new AssemblyInfoSettings {
                                 Copyright               = string.Format("Copyright © Mark Walker {0}", DateTime.Now.Year),
                                 CLSCompliant            = true
                             };
+var nuspecFiles = new [] 
+{
+    new NuSpecContent {Source = "Cake.MSBuildTask.dll"},
+    new NuSpecContent {Source = "Microsoft.Build.Framework.dll"},
+    new NuSpecContent {Source = "Microsoft.Build.Utilities.v4.0.dll"},
+}
 var nuGetPackSettings   = new NuGetPackSettings {
                                 Id                      = assemblyInfo.Product,
                                 Version                 = assemblyInfo.InformationalVersion,
@@ -45,9 +51,9 @@ var nuGetPackSettings   = new NuGetPackSettings {
                                 RequireLicenseAcceptance= false,        
                                 Symbols                 = false,
                                 NoPackageAnalysis       = true,
-                                Files                   = new [] {new NuSpecContent {Source = "Cake.MSBuildTask.dll"}},
-				BasePath 		= binDir, 
-				OutputDirectory 	= nugetRoot
+                                Files                   = nuspecFiles,
+                                BasePath                = binDir, 
+                                OutputDirectory         = nugetRoot
                             };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -126,14 +132,13 @@ Task("Build")
     }
 });
 
-
 Task("Create-NuGet-Package")
     .IsDependentOn("Build")
     .Does(() =>
 {
     if (!System.IO.Directory.Exists(nugetRoot))
     {
-	CreateDirectory(nugetRoot);
+        CreateDirectory(nugetRoot);
     }
     NuGetPack("./nuspec/Cake.MSBuildTask.nuspec", nuGetPackSettings);
 }); 
