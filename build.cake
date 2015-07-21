@@ -33,7 +33,7 @@ var nuspecFiles = new []
     new NuSpecContent {Source = "Cake.MSBuildTask.dll"},
     new NuSpecContent {Source = "Microsoft.Build.Framework.dll"},
     new NuSpecContent {Source = "Microsoft.Build.Utilities.v4.0.dll"},
-}
+};
 var nuGetPackSettings   = new NuGetPackSettings {
                                 Id                      = assemblyInfo.Product,
                                 Version                 = assemblyInfo.InformationalVersion,
