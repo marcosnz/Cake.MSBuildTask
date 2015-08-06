@@ -41,7 +41,7 @@ var nuGetPackSettings   = new NuGetPackSettings {
                                 Authors                 = new[] {assemblyInfo.Company},
                                 Owners                  = new[] {assemblyInfo.Company},
                                 Description             = assemblyInfo.Description,
-                                Summary                 = "Cake AddIn that extends Cake with ability to run MSBuildTasks", 
+                                Summary                 = "Cake AddIn that extends Cake with ability to run any MSBuild Task", 
                                 ProjectUrl              = new Uri("https://github.com/marcosnz/Cake.MSBuildTask/"),
                                 IconUrl                 = new Uri("https://raw.githubusercontent.com/cake-build/graphics/master/png/cake-medium.png"),
                                 LicenseUrl              = new Uri("https://github.com/marcosnz/Cake.MSBuildTask/blob/master/LICENSE"),
@@ -143,6 +143,7 @@ Task("Create-NuGet-Package")
     NuGetPack("./nuspec/Cake.MSBuildTask.nuspec", nuGetPackSettings);
 }); 
 
+/*
 Task("Publish-MyGet")
     .IsDependentOn("Create-NuGet-Package")
     .WithCriteria(() => !isLocalBuild)
@@ -169,13 +170,13 @@ Task("Publish-MyGet")
         ApiKey = apiKey
     }); 
 });
-
+*/
 
 Task("Default")
     .IsDependentOn("Create-NuGet-Package");
 
 Task("AppVeyor")
-    .IsDependentOn("Publish-MyGet");
+    .IsDependentOn("Create-NuGet-Package");
 
 ///////////////////////////////////////////////////////////////////////////////
 // EXECUTION
