@@ -171,12 +171,22 @@ Task("Publish-MyGet")
     }); 
 });
 */
+Task("Test-NuGet-Package-Exists")
+    .IsDependentOn("Create-NuGet-Package")
+    .Does(() =>
+{
+	var packages  = GetFiles("./**/*.nupkg");
+	foreach (var package in packages)
+	{
+	   Information(string.Format("Found {0}", package));
+	}
+}); 
 
 Task("Default")
-    .IsDependentOn("Create-NuGet-Package");
+    .IsDependentOn("Test-NuGet-Package-Exists");
 
 Task("AppVeyor")
-    .IsDependentOn("Create-NuGet-Package");
+    .IsDependentOn("Test-NuGet-Package-Exists");
 
 ///////////////////////////////////////////////////////////////////////////////
 // EXECUTION
