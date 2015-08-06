@@ -1,6 +1,6 @@
-# Build script
+version: 1.0.{build}
 build_script:
-  - cmd: powershell -NoProfile -ExecutionPolicy unrestricted -Command .\build.ps1 -Target "AppVeyor"
-
-# Tests
-test: off
+- ./build.ps1
+artifacts:
+- path: nuget\*.nupkg
+  name: Nuget
