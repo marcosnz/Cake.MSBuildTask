@@ -164,7 +164,12 @@ Task("Publish-NuGet-Packages")
         Information(string.Format("Found {0}", package));
 
         // Push the package.
-        var apiKey = EnvironmentVariable("NUGET_API_KEY");
+        string apiKey = EnvironmentVariable("NUGET_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            throw new Exception("NUGET_API_KEY variable not found");
+        }
+
         NuGetPush(package, new NuGetPushSettings {
                 Source = "https://www.nuget.org/api/v2/package",
                 ApiKey = apiKey
