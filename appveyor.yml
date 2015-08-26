@@ -1,6 +1,12 @@
 version: 1.0.{build}
+environment:
+  NUGET_API_KEY:
+    secure: 9seaN+e9/MTeZkrTw47pVT/po7/vEcRSfUJnvug6Z/ThjO6/wDgSlR+HfpTGBhZV
+  gittoken:
+    secure: x6YxKDuSsTSAWxLt5H/M90M3K+zWin842d9AkUYMwTX1TpB65jHHVjAqd2VHmTqR
+
 build_script:
- - cmd: powershell -NoProfile -ExecutionPolicy unrestricted -Command .\build.ps1 -Target "AppVeyor"
+- ps: ./Build.ps1 -target "AppVeyor"
 artifacts:
 - path: nuget\*.nupkg
   name: Nuget

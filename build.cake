@@ -2,12 +2,15 @@
 // ARGUMENTS
 ///////////////////////////////////////////////////////////////////////////////
 
-var target          = Argument<string>("target", "Default");
-var configuration   = Argument<string>("configuration", "Release");
+var target          = Argument("target", "Default");
+var configuration   = Argument("configuration", "Release");
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
+
+EnsureCakeVersionInReleaseNotes();
+
 var isLocalBuild        = !AppVeyor.IsRunningOnAppVeyor;
 var isPullRequest       = AppVeyor.Environment.PullRequest.IsPullRequest;
 var solutions           = GetFiles("./**/*.sln");
@@ -16,7 +19,8 @@ var releaseNotes        = ParseReleaseNotes("./ReleaseNotes.md");
 var version             = releaseNotes.Version.ToString();
 var binDir              = "./src/Cake.MSBuildTask/bin/" + configuration;
 var nugetRoot           = "./nuget/";
-var semVersion          = isLocalBuild ? version : (version + string.Concat("-build-", AppVeyor.Environment.Build.Number));
+//var semVersion = isLocalBuild ? version : (version + string.Concat("-build-", AppVeyor.Environment.Build.Number));
+var semVersion = version;
 var assemblyInfo        = new AssemblyInfoSettings {
                                 Title                   = "Cake.MSBuildTask",
                                 Description             = "Cake MSBuildTask AddIn",
@@ -132,7 +136,7 @@ Task("Build")
     }
 });
 
-Task("Create-NuGet-Package")
+Task("Create-NuGet-Packages")
     .IsDependentOn("Build")
     .Does(() =>
 {
@@ -171,25 +175,122 @@ Task("Publish-MyGet")
     }); 
 });
 */
-Task("Test-NuGet-Package-Exists")
-    .IsDependentOn("Create-NuGet-Package")
+Task("Publish-NuGet-Packages")
+    .IsDependentOn("Create-NuGet-Packages")
+    .WithCriteria(() => !isLocalBuild)
+    .WithCriteria(() => !isPullRequest) 
     .Does(() =>
 {
-	var packages  = GetFiles("./**/*.nupkg");
-	foreach (var package in packages)
-	{
-	   Information(string.Format("Found {0}", package));
-	}
+    var packages  = GetFiles("./nuget/*.nupkg");
+    foreach (var package in packages)
+    {
+        Information(string.Format("Found {0}", package));
+
+        // Push the package.
+        var apiKey = EnvironmentVariable("NUGET_API_KEY");
+        NuGetPush(package, new NuGetPushSettings {
+                Source = "https://www.nuget.org/api/v2/package",
+                ApiKey = apiKey
+            }); 
+    }
 }); 
 
 Task("Default")
-    .IsDependentOn("Test-NuGet-Package-Exists");
+    .IsDependentOn("Create-NuGet-Packages");
 
 Task("AppVeyor")
-    .IsDependentOn("Test-NuGet-Package-Exists");
+    .IsDependentOn("Publish-NuGet-Packages");
 
 ///////////////////////////////////////////////////////////////////////////////
 // EXECUTION
 ///////////////////////////////////////////////////////////////////////////////
 
 RunTarget(target);
+
+    private void EnsureCakeVersionInReleaseNotes()
+    {
+        bool updated = false;
+        List<string> lines = null;
+        const string fileName = "ReleaseNotes.md";
+        var releaseNotes = ParseReleaseNotes(fileName);
+        var cakeVersion = System.Diagnostics.FileVersionInfo.GetVersionInfo(@"tools\Cake\Cake.exe").FileVersion;
+        string cakeVersionNote = "Built against Cake v"; ;
+        var note = releaseNotes.Notes.FirstOrDefault(n => n.StartsWith(cakeVersionNote));
+        if (note == null)
+        {
+            // No cake version mentioned, add it
+            lines = System.IO.File.ReadAllLines(fileName).ToList();
+            int lineIndex = -1;
+            do
+            {
+              lineIndex++;
+            } while (lines[lineIndex].Trim() == String.Empty);
+            lines.Insert(lineIndex + 1, "* " + cakeVersionNote + cakeVersion);
+            updated = true;
+        }
+        else if (!note.EndsWith(cakeVersion))
+        {
+            // Already released against an older version of Cake, add new release notes
+            Version version = releaseNotes.Version;
+            version = new Version(version.Major, version.Minor, version.Build + 1);
+            lines = System.IO.File.ReadAllLines(fileName).ToList();
+            lines.Insert(0, "");
+            lines.Insert(0, "* " + cakeVersionNote + cakeVersion);
+            lines.Insert(0, String.Format("### New in {0} (Released {1})", version.ToString(3), DateTime.Today.ToString("yyyy/MM/dd")));
+            updated = true;
+        }
+
+        if (updated)
+        {
+            Information("Updating release notes");
+            System.IO.File.WriteAllLines(fileName, lines);
+            RunGit("config --global credential.helper store");
+            RunGit("config --global user.email \"mark@walkersretreat.co.nz\"");
+            RunGit("config --global user.name \"Mark Walker\"");
+            RunGit("config --global push.default simple");
+            if (AppVeyor.IsRunningOnAppVeyor)
+            {
+                string token = EnvironmentVariable("gittoken");
+                if (string.IsNullOrEmpty(token))
+                {
+                    throw new Exception("gittoken variable not found");
+                }
+                
+                string auth = string.Format("https://{0}:x-oauth-basic@github.com\n", token);
+                string credentialsStore = System.Environment.ExpandEnvironmentVariables(@"%USERPROFILE%\.git-credentials");
+                //Information("Writing {0} to {1}", auth, credentialsStore);
+                System.IO.File.AppendAllText(credentialsStore, auth);
+                //Information("{0} now contains:\n{1}", credentialsStore, System.IO.File.ReadAllText(credentialsStore));
+            }
+
+            RunGit("add " + fileName);
+            RunGit("commit -m\"Update release notes\"");
+            RunGit("push");
+        }
+        else
+        {
+           Information("Release notes up to date");
+        }
+    }
+
+        private void RunGit(string arguments)
+        {
+            IEnumerable<string> output;
+            var exitCode = StartProcess("git", new ProcessSettings
+            {
+              Arguments = arguments, 
+              Timeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds,
+              RedirectStandardOutput = true
+            }, out output);
+
+            foreach (var line in output)
+            {
+                Information(line);
+            }
+
+            if (exitCode != 0)
+            {
+                Information("Git returned {0}", exitCode);
+                throw new Exception("Git Error");
+            }
+        }
