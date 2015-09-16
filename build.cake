@@ -39,6 +39,7 @@ var assemblyInfo        = new AssemblyInfoSettings {
 var nuspecFiles = new [] 
 {
     new NuSpecContent {Source = "Cake.MSBuildTask.dll"},
+    new NuSpecContent {Source = "Cake.MSBuildTask.xml"},
     new NuSpecContent {Source = "Microsoft.Build.Framework.dll"},
     new NuSpecContent {Source = "Microsoft.Build.Utilities.v4.0.dll"},
 };
@@ -286,7 +287,7 @@ RunTarget(target);
     private string GetGitBranch()
     {
         string branch  = null;
-        IEnumerable<string> output = RunGit("status");
+        IEnumerable<string> output = RunGit("status", false);
         string line = output.FirstOrDefault(s => s.Trim().StartsWith("On branch"));
         if (line == null)
         {
