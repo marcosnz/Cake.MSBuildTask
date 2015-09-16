@@ -12,7 +12,7 @@ Information("Branch is '{0}'", branchName);
 // GLOBAL VARIABLES
 ///////////////////////////////////////////////////////////////////////////////
 
-EnsureCakeVersionInReleaseNotes();
+EnsureCakeVersionInReleaseNotes(branchName);
 
 var isLocalBuild        = !AppVeyor.IsRunningOnAppVeyor;
 var isPullRequest       = AppVeyor.Environment.PullRequest.IsPullRequest;
@@ -190,8 +190,13 @@ Task("AppVeyor")
 
 RunTarget(target);
 
-    private void EnsureCakeVersionInReleaseNotes()
+    private void EnsureCakeVersionInReleaseNotes(string branchName)
     {
+        if (branchName.StartsWith("Detached"))
+        {
+            return;
+        }
+
         bool updated = false;
         List<string> lines = null;
         const string fileName = "ReleaseNotes.md";
@@ -291,14 +296,20 @@ RunTarget(target);
         string line = output.FirstOrDefault(s => s.Trim().StartsWith("On branch"));
         if (line == null)
         {
-            Information("Unable to determine Git Branch, number " );
-            foreach (var oline in output)
+            line = output.FirstOrDefault(s => s.Trim().StartsWith("HEAD detached from"));
+            if (line == null)
             {
-                Information(oline);
+                Information("Unable to determine Git Branch" );
+                foreach (var oline in output)
+                {
+                    Information(oline);
+                }
+
+                throw new Exception("Unable to determine Git Branch");
             }
 
-            throw new Exception("Unable to determine Git Branch");
+             return "Detached" + line.Replace("HEAD detached from", string.Empty).Trim();
         }
-        
+
         return line.Replace("On branch", string.Empty).Trim();
     }
