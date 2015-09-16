@@ -2,7 +2,7 @@
 An addin for Cake to help running MSBuild tasks
 
 Example code
-```CSharp
+```csharp
 // 1. Add reference to addin the top of your cake script:
 #addin Cake.MSBuildTask
 
@@ -17,16 +17,19 @@ Example code
 Task("TestMSBuildTask")
     .Does(() =>
 {
-        var checkoutFolder = GetDirectories("./SrcFolder").FirstOrDefault();
+        // a. Create the task
         var svn = new MSBuild.ExtensionPack.Subversion.Svn();
 
+        var checkoutFolder = GetDirectories("./SrcFolder").FirstOrDefault();
+ 
+        // b. Configure the task
         // If the folder doesn't exist then do a Checkout, otherwise Update.
         if (checkoutFolder == null)
         {
             checkoutFolder = MakeAbsolute((DirectoryPath)"./SrcFolder");
             svn.TaskAction = "Checkout";
+            // The .ToTaskItem() and .ToTaskItems() are helper methods provided by MSBuildTaskAliases
             svn.Items = checkoutUrl.ToTaskItems();
-            // The .ToTaskItem() is a helper method provided by MSBuildTaskAliases  
             svn.Destination = checkoutFolder.ToTaskItem();
         }
         else
@@ -35,6 +38,7 @@ Task("TestMSBuildTask")
             svn.Items = checkoutFolder.ToTaskItems();
         }
  
+        // c. Execute the task
         MSBuildTaskExecute(svn);
 });
 ```

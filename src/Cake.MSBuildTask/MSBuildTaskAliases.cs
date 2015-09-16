@@ -45,15 +45,18 @@ namespace Cake.MSBuildTask
         /// Task("TestMSBuildTask")
         ///     .Does(() =>
         /// {
-        ///         var checkoutFolder = GetDirectories("./SrcFolder").FirstOrDefault();
+        ///         // a. Create the task
         ///         var svn = new MSBuild.ExtensionPack.Subversion.Svn();
+        ///         var checkoutFolder = GetDirectories("./SrcFolder").FirstOrDefault();
         /// 
+        ///          // b. Configure the task
+        ///         // If the folder doesn't exist then do a Checkout, otherwise Update.
         ///         if (checkoutFolder == null)
         ///         {
         ///             checkoutFolder = MakeAbsolute((DirectoryPath)"./SrcFolder");
         ///             svn.TaskAction = "Checkout";
+        ///             // The .ToTaskItem() and .ToTaskItems() are helper methods provided by MSBuildTaskAliases
         ///             svn.Items = checkoutUrl.ToTaskItems();
-        ///             // The .ToTaskItem() is a helper method provided by MSBuildTaskAliases  
         ///             svn.Destination = checkoutFolder.ToTaskItem();
         ///         }
         ///         else
@@ -62,6 +65,7 @@ namespace Cake.MSBuildTask
         ///             svn.Items = checkoutFolder.ToTaskItems();
         ///         }
         ///  
+        ///         // c. Execute the task
         ///         MSBuildTaskExecute(svn);
         /// });
         /// </code>
