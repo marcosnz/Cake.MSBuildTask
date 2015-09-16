@@ -1,4 +1,5 @@
 ### New in 0.0.5 WIP
+* Built against Cake v0.5.4
 * Update version number
 
 ### New in 0.0.4 (Released 2015/09/16)
