@@ -291,12 +291,11 @@ RunTarget(target);
 
     private string GetGitBranch()
     {
-        string branch  = null;
         IEnumerable<string> output = RunGit("status", false);
         string line = output.FirstOrDefault(s => s.Trim().StartsWith("On branch"));
         if (line == null)
         {
-            line = output.FirstOrDefault(s => s.Trim().StartsWith("HEAD detached from"));
+            line = output.FirstOrDefault(s => s.Trim().StartsWith("HEAD detached "));
             if (line == null)
             {
                 Information("Unable to determine Git Branch" );
@@ -308,7 +307,7 @@ RunTarget(target);
                 throw new Exception("Unable to determine Git Branch");
             }
 
-             return "Detached" + line.Replace("HEAD detached from", string.Empty).Trim();
+             return "Detached " + line.Replace("HEAD detached", string.Empty).Trim();
         }
 
         return line.Replace("On branch", string.Empty).Trim();
