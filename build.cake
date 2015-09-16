@@ -4,6 +4,9 @@
 
 var target          = Argument("target", "Default");
 var configuration   = Argument("configuration", "Release");
+var branchName      = GetGitBranch();
+
+Information("Branch is '{0}'", branchName);
 
 ///////////////////////////////////////////////////////////////////////////////
 // GLOBAL VARIABLES
@@ -19,8 +22,9 @@ var releaseNotes        = ParseReleaseNotes("./ReleaseNotes.md");
 var version             = releaseNotes.Version.ToString();
 var binDir              = "./src/Cake.MSBuildTask/bin/" + configuration;
 var nugetRoot           = "./nuget/";
-//var semVersion = isLocalBuild ? version : (version + string.Concat("-build-", AppVeyor.Environment.Build.Number));
-var semVersion = version;
+var isMasterBranch      = branchName == "master";
+var semVersion = isLocalBuild || isMasterBranch ? version : (version + string.Concat("-pre-", AppVeyor.Environment.Build.Number));
+
 var assemblyInfo        = new AssemblyInfoSettings {
                                 Title                   = "Cake.MSBuildTask",
                                 Description             = "Cake MSBuildTask AddIn",
@@ -35,6 +39,7 @@ var assemblyInfo        = new AssemblyInfoSettings {
 var nuspecFiles = new [] 
 {
     new NuSpecContent {Source = "Cake.MSBuildTask.dll"},
+    new NuSpecContent {Source = "Cake.MSBuildTask.xml"},
     new NuSpecContent {Source = "Microsoft.Build.Framework.dll"},
     new NuSpecContent {Source = "Microsoft.Build.Utilities.v4.0.dll"},
 };
@@ -148,34 +153,6 @@ Task("Create-NuGet-Packages")
     NuGetPack("./nuspec/Cake.MSBuildTask.nuspec", nuGetPackSettings);
 }); 
 
-/*
-Task("Publish-MyGet")
-    .IsDependentOn("Create-NuGet-Package")
-    .WithCriteria(() => !isLocalBuild)
-    .WithCriteria(() => !isPullRequest) 
-    .Does(() =>
-{
-    // Resolve the API key.
-    var apiKey = EnvironmentVariable("MYGET_API_KEY");
-    if(string.IsNullOrEmpty(apiKey)) {
-        throw new InvalidOperationException("Could not resolve MyGet API key.");
-    }
-
-    var source = EnvironmentVariable("MYGET_SOURCE");
-    if(string.IsNullOrEmpty(source)) {
-        throw new InvalidOperationException("Could not resolve MyGet source.");
-    }
-
-    // Get the path to the package.
-    var package = nugetRoot + "Cake.MSBuildTask." + semVersion + ".nupkg";
-
-    // Push the package.
-    NuGetPush(package, new NuGetPushSettings {
-        Source = source,
-        ApiKey = apiKey
-    }); 
-});
-*/
 Task("Publish-NuGet-Packages")
     .IsDependentOn("Create-NuGet-Packages")
     .WithCriteria(() => !isLocalBuild)
@@ -188,7 +165,12 @@ Task("Publish-NuGet-Packages")
         Information(string.Format("Found {0}", package));
 
         // Push the package.
-        var apiKey = EnvironmentVariable("NUGET_API_KEY");
+        string apiKey = EnvironmentVariable("NUGET_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            throw new Exception("NUGET_API_KEY variable not found");
+        }
+
         NuGetPush(package, new NuGetPushSettings {
                 Source = "https://www.nuget.org/api/v2/package",
                 ApiKey = apiKey
@@ -274,24 +256,49 @@ RunTarget(target);
         }
     }
 
-        private void RunGit(string arguments)
+    private IEnumerable<string> RunGit(string arguments, bool logOutput = true)
+    {
+        IEnumerable<string> output;
+        var exitCode = StartProcess("git", new ProcessSettings
         {
-            IEnumerable<string> output;
-            var exitCode = StartProcess("git", new ProcessSettings
-            {
-              Arguments = arguments, 
-              Timeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds,
-              RedirectStandardOutput = true
-            }, out output);
+          Arguments = arguments, 
+          Timeout = (int)TimeSpan.FromMinutes(1).TotalMilliseconds,
+          RedirectStandardOutput = true
+        }, out output);
 
+        output = output.ToList();
+        if (logOutput)
+        {
             foreach (var line in output)
             {
                 Information(line);
             }
-
-            if (exitCode != 0)
-            {
-                Information("Git returned {0}", exitCode);
-                throw new Exception("Git Error");
-            }
         }
+
+        if (exitCode != 0)
+        {
+            Information("Git returned {0}", exitCode);
+            throw new Exception("Git Error");
+        }
+        
+        return output;
+    }
+
+    private string GetGitBranch()
+    {
+        string branch  = null;
+        IEnumerable<string> output = RunGit("status", false);
+        string line = output.FirstOrDefault(s => s.Trim().StartsWith("On branch"));
+        if (line == null)
+        {
+            Information("Unable to determine Git Branch, number " );
+            foreach (var oline in output)
+            {
+                Information(oline);
+            }
+
+            throw new Exception("Unable to determine Git Branch");
+        }
+        
+        return line.Replace("On branch", string.Empty).Trim();
+    }
