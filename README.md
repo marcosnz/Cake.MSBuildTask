@@ -16,7 +16,7 @@ Example code
 // Here we are using SVN task from  MSBuild.Extension.Pack:
 Task("TestMSBuildTask")
     .Does(() =>
-{
+    {
         // a. Create the task
         var svn = new MSBuild.ExtensionPack.Subversion.Svn();
 
@@ -40,5 +40,5 @@ Task("TestMSBuildTask")
  
         // c. Execute the task
         MSBuildTaskExecute(svn);
-});
+    });
 ```

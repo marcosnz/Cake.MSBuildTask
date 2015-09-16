@@ -44,7 +44,7 @@ namespace Cake.MSBuildTask
         /// // Here we are using SVN task from  MSBuild.Extension.Pack:
         /// Task("TestMSBuildTask")
         ///     .Does(() =>
-        /// {
+        ///     {
         ///         // a. Create the task
         ///         var svn = new MSBuild.ExtensionPack.Subversion.Svn();
         ///         var checkoutFolder = GetDirectories("./SrcFolder").FirstOrDefault();
@@ -67,7 +67,7 @@ namespace Cake.MSBuildTask
         ///  
         ///         // c. Execute the task
         ///         MSBuildTaskExecute(svn);
-        /// });
+        ///     });
         /// </code>
         /// </example>
         [CakeMethodAlias]
